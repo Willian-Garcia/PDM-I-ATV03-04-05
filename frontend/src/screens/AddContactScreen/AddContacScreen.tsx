@@ -23,35 +23,54 @@ const AddContactScreen: React.FC<Props> = ({ navigation }) => {
     latitude?: number;
     longitude?: number;
   }>({});
+  const [locationPermission, setLocationPermission] = useState(false);
 
-  // Função para tratar o clique no mapa
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissão Negada",
+          "A aplicação precisa de acesso à localização para funcionar corretamente."
+        );
+      }
+      setLocationPermission(status === "granted");
+    };
+
+    requestLocationPermission();
+  }, []);
+
   const handleMapPress = async (event: MapPressEvent) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
 
-    console.log("Latitude clicada:", latitude);
-    console.log("Longitude clicada:", longitude);
+    //console.log("Latitude clicada:", latitude);
+    //console.log("Longitude clicada:", longitude);
+
+    if (!locationPermission) {
+      Alert.alert("Permissão Negada", "Permissão de localização necessária.");
+      return;
+    }
 
     try {
       const [location] = await Location.reverseGeocodeAsync({
         latitude,
         longitude,
       });
-
+      
       if (location) {
-        console.log("Detalhes da localização:", location);
-
+        //console.log("Detalhes da localização:", location);
+      
         setLocationDetails({
-          street: location.street || undefined,
-          name: location.name || undefined, // Nome ou número do imóvel
-          city: location.city || undefined,
-          region: location.region || undefined,
-          postalCode: location.postalCode || undefined,
-          country: location.country || undefined,
+          street: location.street || "",
+          name: location.name || "",
+          city: location.city || "",
+          region: location.region || "",
+          postalCode: location.postalCode || "",
+          country: location.country || "",
           latitude,
           longitude,
         });
-
-        // Incluir `name` no endereço completo
+      
         const fullAddress = `${location.street || ""}, ${location.name || ""} ${
           location.city || ""
         }, ${location.region || ""}, ${location.postalCode || ""}, ${
@@ -67,7 +86,6 @@ const AddContactScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  // Função para salvar o contato
   const handleAddContact = async () => {
     if (
       !name ||
@@ -84,7 +102,7 @@ const AddContactScreen: React.FC<Props> = ({ navigation }) => {
         name,
         address,
         street: locationDetails.street || "",
-        houseNumber: locationDetails.name || "", // Adicione o número do imóvel
+        houseNumber: locationDetails.name || "",
         city: locationDetails.city || "",
         region: locationDetails.region || "",
         postalCode: locationDetails.postalCode || "",
@@ -93,10 +111,10 @@ const AddContactScreen: React.FC<Props> = ({ navigation }) => {
         longitude: locationDetails.longitude,
       };
 
-      console.log("Enviando contato:", newContact);
+      //console.log("Enviando contato:", newContact);
 
       const response = await addContact(newContact);
-      console.log("Resposta do backend:", response);
+      //console.log("Resposta do backend:", response);
 
       Alert.alert("Sucesso", "Contato salvo com sucesso!");
       navigation.goBack();

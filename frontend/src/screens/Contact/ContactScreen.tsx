@@ -47,7 +47,7 @@ const ContactScreen: React.FC<Props> = ({ navigation }) => {
       style={styles.contactcontainer}
       onPress={() =>
         navigation.navigate("LocationScreen", {
-          id: item.id, // Passando o ID do contato
+          id: item.id,
           latitude: item.latitude,
           longitude: item.longitude,
         })

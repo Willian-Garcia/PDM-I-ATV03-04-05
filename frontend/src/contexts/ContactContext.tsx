@@ -46,17 +46,13 @@ export const ContactProvider = ({ children }: ContactProviderProps) => {
 
   const updateContact = async (updatedContact: IContact) => {
     try {
-      // Envia a atualização para o backend
       const response = await updateContactService(updatedContact);
   
-      // Atualiza o estado local
       setContacts((prevContacts) =>
         prevContacts.map((contact) =>
-          contact.id === response.id ? response : contact // Substitui pelo objeto retornado
+          contact.id === response.id ? response : contact
         )
       );
-  
-      console.log("Estado atualizado no contexto:", response); // Log para depuração
     } catch (error) {
       console.error("Erro ao atualizar contato no contexto:", error);
     }

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { View, Alert } from "react-native";
 import MapView, { Marker, MapPressEvent } from "react-native-maps";
 import styles from "./styles";
@@ -11,7 +11,7 @@ interface Props
   extends NativeStackScreenProps<RootStackParamList, "LocationScreen"> {}
 
 const LocationScreen: React.FC<Props> = ({ route }) => {
-  const { id, latitude, longitude } = route.params; // Recebendo as coordenadas do contato
+  const { id, latitude, longitude } = route.params;
   const context = useContext(ContactContext);
 
   if (!context) {
@@ -25,51 +25,67 @@ const LocationScreen: React.FC<Props> = ({ route }) => {
     longitude,
   });
 
-  // Função chamada ao clicar no mapa
+  const [locationPermission, setLocationPermission] = useState(false);
+
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissão Negada",
+          "A aplicação precisa de acesso à localização para funcionar corretamente."
+        );
+        setLocationPermission(false);
+      } else {
+        setLocationPermission(true);
+      }
+    };
+
+    requestLocationPermission();
+  }, []);
+
   const handleMapPress = async (event: MapPressEvent) => {
+    if (!locationPermission) {
+      Alert.alert("Permissão Negada", "Permissão de localização necessária.");
+      return;
+    }
+  
     const { latitude, longitude } = event.nativeEvent.coordinate;
     setMarkerPosition({ latitude, longitude });
-
+  
     try {
-      // Obter o endereço com base nas novas coordenadas
       const [location] = await Location.reverseGeocodeAsync({
         latitude,
         longitude,
       });
-
+  
       const updatedAddress = `${location.street || ""}, ${location.name || ""} ${
         location.city || ""
       }, ${location.region || ""}, ${location.postalCode || ""}, ${
         location.country || ""
       }`;
-
-      // Obter os dados do contato pelo ID
+  
       const contactToUpdate = contacts.find((contact) => contact.id === id);
-
+  
       if (!contactToUpdate) {
         Alert.alert("Erro", "Contato não encontrado para atualização.");
         return;
       }
-
-      // Atualizar o contato com o novo endereço e coordenadas
+  
       await updateContact({
-        ...contactToUpdate,
-        latitude,
-        longitude,
-        address: updatedAddress, // Atualiza o endereço
-      });
-
-      console.log("Contato atualizado no backend:", {
         ...contactToUpdate,
         latitude,
         longitude,
         address: updatedAddress,
       });
-
-      Alert.alert("Sucesso", "Localização atualizada com sucesso!");
+  
+      Alert.alert(
+        "Sucesso! Localização Atualizada",
+        `O novo endereço é:\n${updatedAddress}`
+      );
     } catch (error) {
-      console.error("Erro ao atualizar localização:", error);
-      Alert.alert("Erro", "Não foi possível atualizar a localização.");
+      console.error("Erro ao buscar endereço:", error);
+      Alert.alert("Erro", "Falha ao buscar o endereço.");
     }
   };
 
@@ -83,7 +99,7 @@ const LocationScreen: React.FC<Props> = ({ route }) => {
           latitudeDelta: 0.005,
           longitudeDelta: 0.005,
         }}
-        onPress={handleMapPress} // Captura o clique no mapa
+        onPress={handleMapPress}
       >
         <Marker
           coordinate={markerPosition}

@@ -1,13 +1,14 @@
-import axios, { AxiosInstance } from "axios";
 import { BACKEND_URL } from "@env";
-
-console.log("BACKEND_URL:", BACKEND_URL);
+import axios, { AxiosInstance } from "axios";
 
 const api: AxiosInstance = axios.create({
-  baseURL: BACKEND_URL, // Usa a variável importada
+  baseURL: BACKEND_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+console.log("Base URL em uso:", BACKEND_URL);
+
 
 export default api;
