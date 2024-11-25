@@ -4,7 +4,7 @@ export interface RootStackParamList extends ParamListBase {
     HomeScreen: undefined; 
     ContactScreen: undefined;
     AddContactScreen: undefined;
-    LocationScreen: { latitude: number; longitude: number };
+    LocationScreen: { id: number; latitude: number; longitude: number };
 }
 
   

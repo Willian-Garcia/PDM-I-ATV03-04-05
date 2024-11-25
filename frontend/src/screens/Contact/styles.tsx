@@ -14,6 +14,12 @@ const styles = StyleSheet.create({
     borderColor: "lightgray",
     borderRadius: 8,
   },
+  closecontainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center", 
+    paddingRight: 0.1,
+  },
   contacttext: {
     fontSize: 15,
     fontWeight:"regular",

@@ -1,10 +1,16 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { IContact } from "../types/IContact";
-import { getContacts } from "../services/LocationContactService";
+import {
+  getContacts,
+  deleteContact as deleteContactService,
+  updateContact as updateContactService,
+} from "../services/LocationContactService";
 
 interface ContactContextData {
   contacts: IContact[];
   loadContacts: () => Promise<void>;
+  deleteContact: (id: number) => Promise<void>;
+  updateContact: (updatedContact: IContact) => Promise<void>;
 }
 
 export const ContactContext = createContext<ContactContextData | undefined>(
@@ -27,12 +33,41 @@ export const ContactProvider = ({ children }: ContactProviderProps) => {
     }
   };
 
+  const deleteContact = async (id: number) => {
+    try {
+      await deleteContactService(id);
+      setContacts((prevContacts) =>
+        prevContacts.filter((contact) => contact.id !== id)
+      );
+    } catch (error) {
+      console.error("Erro ao excluir contato:", error);
+    }
+  };
+
+  const updateContact = async (updatedContact: IContact) => {
+    try {
+      // Envia a atualização para o backend
+      const response = await updateContactService(updatedContact);
+  
+      // Atualiza o estado local
+      setContacts((prevContacts) =>
+        prevContacts.map((contact) =>
+          contact.id === response.id ? response : contact // Substitui pelo objeto retornado
+        )
+      );
+  
+      console.log("Estado atualizado no contexto:", response); // Log para depuração
+    } catch (error) {
+      console.error("Erro ao atualizar contato no contexto:", error);
+    }
+  };
+
   useEffect(() => {
     loadContacts();
   }, []);
 
   return (
-    <ContactContext.Provider value={{ contacts, loadContacts }}>
+    <ContactContext.Provider value={{ contacts, loadContacts, deleteContact, updateContact }}>
       {children}
     </ContactContext.Provider>
   );

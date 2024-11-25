@@ -1,41 +1,67 @@
 import React, { useContext, useEffect } from "react";
-import { FlatList, TouchableOpacity, View, Text } from "react-native";
+import { FlatList, TouchableOpacity, View, Text, Alert } from "react-native";
 import styles from "./styles";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/rootStack";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { ContactContext } from "../../contexts/ContactContext"; // Importa o contexto
+import { ContactContext } from "../../contexts/ContactContext";
 import { IContact } from "src/types/IContact";
 
-interface Props extends NativeStackScreenProps<RootStackParamList, "ContactScreen"> {}
+interface Props
+  extends NativeStackScreenProps<RootStackParamList, "ContactScreen"> {}
 
 const ContactScreen: React.FC<Props> = ({ navigation }) => {
-  // Usa o contexto para acessar os contatos e a função de carregamento
   const context = useContext(ContactContext);
 
   if (!context) {
-    throw new Error("ContactScreen deve ser usado dentro de um ContactProvider.");
+    throw new Error(
+      "ContactScreen deve ser usado dentro de um ContactProvider."
+    );
   }
 
-  const { contacts, loadContacts } = context;
+  const { contacts, loadContacts, deleteContact } = context;
 
-  // Carrega os contatos ao montar o componente
   useEffect(() => {
     loadContacts();
   }, [loadContacts]);
 
-  // Função para renderizar cada contato
+  const handleDelete = (id: number) => {
+    Alert.alert(
+      "Excluir Contato",
+      "Tem certeza que deseja excluir este contato?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: async () => {
+            await deleteContact(id);
+          },
+        },
+      ]
+    );
+  };
+
   const renderContact = ({ item }: { item: IContact }) => (
     <TouchableOpacity
       style={styles.contactcontainer}
       onPress={() =>
         navigation.navigate("LocationScreen", {
+          id: item.id, // Passando o ID do contato
           latitude: item.latitude,
           longitude: item.longitude,
         })
       }
     >
-      <Text style={styles.contacttext}>{item.name}</Text>
+      <View style={styles.closecontainer}>
+        <Text style={styles.contacttext}>{item.name}</Text>
+        <TouchableOpacity
+          style={{ marginBottom: 1 }}
+          onPress={() => handleDelete(item.id)}
+        >
+          <Ionicons name="close-circle" size={28} color={"red"} />
+        </TouchableOpacity>
+      </View>
       <Text style={styles.contacttext}>{item.address}</Text>
     </TouchableOpacity>
   );
@@ -44,7 +70,7 @@ const ContactScreen: React.FC<Props> = ({ navigation }) => {
     <View style={styles.container}>
       <FlatList
         data={contacts}
-        keyExtractor={(item) => item.id.toString()} // Certifique-se de que `id` seja uma string ou número
+        keyExtractor={(item) => item.id.toString()}
         renderItem={renderContact}
       />
       <TouchableOpacity
