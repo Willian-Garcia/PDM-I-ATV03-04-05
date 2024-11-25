@@ -49,36 +49,36 @@ const LocationScreen: React.FC<Props> = ({ route }) => {
       Alert.alert("Permissão Negada", "Permissão de localização necessária.");
       return;
     }
-  
+
     const { latitude, longitude } = event.nativeEvent.coordinate;
     setMarkerPosition({ latitude, longitude });
-  
+
     try {
       const [location] = await Location.reverseGeocodeAsync({
         latitude,
         longitude,
       });
-  
+
       const updatedAddress = `${location.street || ""}, ${location.name || ""} ${
-        location.city || ""
+        location.city || location.subregion || ""
       }, ${location.region || ""}, ${location.postalCode || ""}, ${
         location.country || ""
       }`;
-  
+
       const contactToUpdate = contacts.find((contact) => contact.id === id);
-  
+
       if (!contactToUpdate) {
         Alert.alert("Erro", "Contato não encontrado para atualização.");
         return;
       }
-  
+
       await updateContact({
         ...contactToUpdate,
         latitude,
         longitude,
         address: updatedAddress,
       });
-  
+
       Alert.alert(
         "Sucesso! Localização Atualizada",
         `O novo endereço é:\n${updatedAddress}`
@@ -101,10 +101,7 @@ const LocationScreen: React.FC<Props> = ({ route }) => {
         }}
         onPress={handleMapPress}
       >
-        <Marker
-          coordinate={markerPosition}
-          title="Localização do Contato"
-        />
+        <Marker coordinate={markerPosition} title="Localização do Contato" />
       </MapView>
     </View>
   );
